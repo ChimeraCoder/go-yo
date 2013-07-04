@@ -1,0 +1,24 @@
+go-yo
+===========
+
+
+Go-Yo is like a yo-yo for email. The goal is to be self-hosted, giving the user full control over the deployment, and avoiding potential privacy or security issues with third-party services.
+
+
+
+Bouncing Workflow
+-----------------
+
+You will need to create a dedicated email address for bouncing Go-Yo email. For the purposes of this workflow, we will assume that your Go-Yo email address is `goyo@example.com`
+
+(Almost) any email address will do, as long as you can receive mail there, **and** as long as your email provider allows you to create variants of your email address, like `goyo+foo@example.com`. (Google/Gmail follows this convention - if you use another mail provider, please verify this).
+
+
+In an email client such as `mutt`, simply bounce (or forward) an email to `goyo+3.hours@example.com` in order to have that thread bumped back to the top of your inbox in 3 hours. You can also do things like `goyo+5.days@example.com`, and `goyo+on.june.1@example.com`.
+
+For the time being, Go-Yo will be very conservative with how it parses this email address. This is a good thing; you don't want Go-Yo to think you want a reminder in six months when you really meant six minutes. If there are any problems with parsing the bounce interval, Go-Yo will send an error message (via email) **immediately**, so you can deal with it right away. No surprises.
+
+
+
+
+
