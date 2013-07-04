@@ -20,5 +20,8 @@ For the time being, Go-Yo will be very conservative with how it parses this emai
 
 
 
+Scheduling Workflow
+---------------------
 
+Go-Yo can also be used to schedule messages. The exact workflow for this is TBD.
 
