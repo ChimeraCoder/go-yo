@@ -9,8 +9,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/mail"
+	"regexp"
 	"time"
 )
+
+//TODO this needs to be set in an init() function
+var ROOT_DIRECTORY = ""
+
+var TIME_REGEX = regexp.MustCompile(`\+([0-9]+)\.([A-Za-z]+)@`)
 
 //processMessage processes each new message that appears in /new
 func processMessage(filename string) error {
@@ -47,16 +53,59 @@ func processMessage(filename string) error {
 	}
 
 	//Move message from /new to /cur, setting Maildir info flag to S (seen)
+	err = os.Rename(filepath.Join(ROOT_DIRECTORY, "new", filename), filepath.Join(ROOT_DIRECTORY, "cur", filename))
 
-	//TODO actually implement this
-
-	return nil
+	return err
 }
 
-//Parse an email and return the future time at which to bounce the email
+//Parse an email address and return the future time at which to bounce the email
 func extractTimeFromAddress(to_address string) (time.Time, error) {
-	//TODO actually implement this!
-	return time.Now(), nil
+
+	matches := TIME_REGEX.FindStringSubmatch(to_address)
+
+	number_s := matches[1]
+	time_unit_s := matches[2]
+
+	number, err := strconv.Atoi(number_s)
+	if err != nil {
+		panic(err)
+	}
+
+	//For now, we'll support minutes, hours, days, weeks, and months
+
+	var time_unit time.Duration
+
+	switch strings.ToLower(time_unit) {
+	case "minute", "minutes":
+		{
+			time_unit = time.Minute
+		}
+
+	case "hour", "hours":
+		{
+			time_unit = time.Hour
+		}
+
+	case "day", "days":
+		{
+			time_unit = time.Day
+		}
+
+	case "week", "weeks":
+		{
+			time_unit = 7 * time.Day
+		}
+
+	case "month", "months":
+		{
+			time_unit = 30 * time.Day
+		}
+	}
+
+	delay := number * time_unit
+	future_time := time.Now().Add(number * time_unit)
+	return future_time, nil
+
 }
 
 //scheduleFutureMessage schedules a future email delivery
