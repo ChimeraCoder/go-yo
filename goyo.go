@@ -11,6 +11,10 @@ import (
 	"net/mail"
 	"regexp"
 	"time"
+    "os"
+    "strings"
+    "strconv"
+    "path/filepath"
 )
 
 //TODO this needs to be set in an init() function
@@ -56,7 +60,7 @@ func processMessage(filename string) error {
 	}
 
 	//Move message from /new to /cur, setting Maildir info flag to S (seen)
-	err = os.Rename(filepath.Join(ROOT_DIRECTORY, "new", filename), filepath.Join(ROOT_DIRECTORY, "cur", filename))
+    err = os.Rename(filepath.Join(ROOT_DIRECTORY, "new", filename), filepath.Join(ROOT_DIRECTORY, "cur", uniqueFromFilename(filename) + ":2,S"))
 
 	return err
 }
@@ -78,7 +82,7 @@ func extractTimeFromAddress(to_address string) (time.Time, error) {
 
 	var time_unit time.Duration
 
-	switch strings.ToLower(time_unit) {
+	switch strings.ToLower(time_unit_s) {
 	case "minute", "minutes":
 		{
 			time_unit = time.Minute
@@ -91,22 +95,22 @@ func extractTimeFromAddress(to_address string) (time.Time, error) {
 
 	case "day", "days":
 		{
-			time_unit = time.Day
+			time_unit = 24 * time.Hour
 		}
 
 	case "week", "weeks":
 		{
-			time_unit = 7 * time.Day
+			time_unit = 7 * 24 * time.Hour
 		}
 
 	case "month", "months":
 		{
-			time_unit = 30 * time.Day
+			time_unit = 30 * 7 * 24 * time.Hour
 		}
 	}
 
-	delay := number * time_unit
-	future_time := time.Now().Add(number * time_unit)
+	delay := time.Duration(number) * time_unit
+	future_time := time.Now().Add(delay)
 	return future_time, nil
 
 }
@@ -122,7 +126,9 @@ func scheduleFutureMessage(filename string, t time.Time) (err error) {
 
 //uniqueFromFilename extracts the unique part of a Maildir filename
 func uniqueFromFilename(filename string) (uniq string) {
-    //TODO the real input set may actually be larger/more complicated than this
+    //The real input set may actually be larger/more complicated than this
+    //But this works for now
     matches := UNIQ_FILENAME_REGEX.FindStringSubmatch(filename)
     uniq = matches[1]
+    return
 }
