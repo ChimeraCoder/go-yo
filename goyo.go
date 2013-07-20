@@ -18,6 +18,9 @@ var ROOT_DIRECTORY = ""
 
 var TIME_REGEX = regexp.MustCompile(`\+([0-9]+)\.([A-Za-z]+)@`)
 
+var UNIQ_FILENAME_REGEX = regexp.MustCompile(`(.+):`)
+
+
 //processMessage processes each new message that appears in /new
 func processMessage(filename string) error {
 	//Parse message and determine when the message should be yo-yoed
@@ -118,7 +121,8 @@ func scheduleFutureMessage(filename string, t time.Time) (err error) {
 }
 
 //uniqueFromFilename extracts the unique part of a Maildir filename
-func uniqueFromFilename(filename string) string {
-	//TODO actually implement this
-	return filename
+func uniqueFromFilename(filename string) (uniq string) {
+    //TODO the real input set may actually be larger/more complicated than this
+    matches := UNIQ_FILENAME_REGEX.FindStringSubmatch(filename)
+    uniq = matches[1]
 }
