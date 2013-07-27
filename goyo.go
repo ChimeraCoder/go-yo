@@ -65,7 +65,7 @@ func processMessage(filename string) error {
 	}
 
 	//Move message from /new to /cur, setting Maildir info flag to S (seen)
-	destination := filepath.Join(ROOT_DIRECTORY, "cur", uniqueFromFilename(filename)+":2,S")
+	destination := filepath.Join(*ROOT_DIRECTORY, "cur", strings.TrimPrefix(uniqueFromFilename(filename)+":2,S", filepath.Join(*ROOT_DIRECTORY, "new")))
 	log.Printf("Moving message from %s to %s", filename, destination)
 	err = os.Rename(filename, destination)
 
@@ -117,6 +117,7 @@ func extractTimeFromAddress(to_address string) (time.Time, error) {
 	}
 
 	delay := time.Duration(number) * time_unit
+	//TODO use the time the message was sent instead of time.Now
 	future_time := time.Now().Add(delay)
 	return future_time, nil
 
