@@ -50,7 +50,7 @@ func processMessage(filename string) error {
 	}
 
 	to_address := addresses[0].Address
-	log.Print("Found address %s", to_address)
+	log.Printf("Found address %s", to_address)
 
 	t, err := extractTimeFromAddress(to_address)
 	if err != nil {
@@ -59,14 +59,14 @@ func processMessage(filename string) error {
 
 	//Schedule future message for that yo-yoed time
 
-	log.Print("Scheduling message for %v", t)
+	log.Printf("Scheduling message for %v", t)
 	if err := scheduleFutureMessage(filename, t); err != nil {
 		return err
 	}
 
 	//Move message from /new to /cur, setting Maildir info flag to S (seen)
 	destination := filepath.Join(ROOT_DIRECTORY, "cur", uniqueFromFilename(filename)+":2,S")
-	log.Print("Moving message from %s to %s", filename, destination)
+	log.Printf("Moving message from %s to %s", filename, destination)
 	err = os.Rename(filename, destination)
 
 	return err
