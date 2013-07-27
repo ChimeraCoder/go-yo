@@ -6,24 +6,27 @@ package goyo
 
 import (
 	"bytes"
+	"flag"
 	"io/ioutil"
 	"log"
 	"net/mail"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strconv"
+	"strings"
 	"time"
-    "os"
-    "strings"
-    "strconv"
-    "path/filepath"
 )
 
-//TODO this needs to be set in an init() function
-var ROOT_DIRECTORY = ""
+var ROOT_DIRECTORY = flag.String("rootdir", "", "root directory for mail")
 
 var TIME_REGEX = regexp.MustCompile(`\+([0-9]+)\.([A-Za-z]+)@`)
 
 var UNIQ_FILENAME_REGEX = regexp.MustCompile(`(.+):`)
 
+func init() {
+	flag.Parse()
+}
 
 //processMessage processes each new message that appears in /new
 func processMessage(filename string) error {
@@ -47,6 +50,7 @@ func processMessage(filename string) error {
 	}
 
 	to_address := addresses[0].Address
+	log.Print("Found address %s", to_address)
 
 	t, err := extractTimeFromAddress(to_address)
 	if err != nil {
@@ -55,12 +59,15 @@ func processMessage(filename string) error {
 
 	//Schedule future message for that yo-yoed time
 
+	log.Print("Scheduling message for %v", t)
 	if err := scheduleFutureMessage(filename, t); err != nil {
 		return err
 	}
 
 	//Move message from /new to /cur, setting Maildir info flag to S (seen)
-    err = os.Rename(filepath.Join(ROOT_DIRECTORY, "new", filename), filepath.Join(ROOT_DIRECTORY, "cur", uniqueFromFilename(filename) + ":2,S"))
+	destination := filepath.Join(ROOT_DIRECTORY, "cur", uniqueFromFilename(filename)+":2,S")
+	log.Print("Moving message from %s to %s", filename, destination)
+	err = os.Rename(filename, destination)
 
 	return err
 }
@@ -126,9 +133,9 @@ func scheduleFutureMessage(filename string, t time.Time) (err error) {
 
 //uniqueFromFilename extracts the unique part of a Maildir filename
 func uniqueFromFilename(filename string) (uniq string) {
-    //The real input set may actually be larger/more complicated than this
-    //But this works for now
-    matches := UNIQ_FILENAME_REGEX.FindStringSubmatch(filename)
-    uniq = matches[1]
-    return
+	//The real input set may actually be larger/more complicated than this
+	//But this works for now
+	matches := UNIQ_FILENAME_REGEX.FindStringSubmatch(filename)
+	uniq = matches[1]
+	return
 }
