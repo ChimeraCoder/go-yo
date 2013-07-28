@@ -1,6 +1,5 @@
 // Copyright 2011 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// Use of this source code is governed by a BSD-style // license that can be found in the LICENSE file.
 
 package goyo
 
@@ -20,6 +19,8 @@ import (
 	"time"
 )
 
+const _CHECK_INTERVAL = 120 * time.Second
+
 //WARNING: All of these flags are unstable and currently subject to change
 var ROOT_DIRECTORY = flag.String("rootdir", "", "root directory for mail")
 var EMAIL_ADDRESS = flag.String("email", "", "email address")
@@ -29,6 +30,7 @@ var CONFIGURED_EMAIL = flag.String("configuredemail", "", "configured email")
 var TIME_REGEX = regexp.MustCompile(`\+([0-9]+)\.([A-Za-z]+)@`)
 
 var UNIQ_FILENAME_REGEX = regexp.MustCompile(`(.+):`)
+
 
 func init() {
 	flag.Parse()
@@ -57,8 +59,9 @@ func processMessage(filename string) error {
 
 	message_id := message.Header.Get("Message-ID")
 	subject := message.Header.Get("Subject")
+	from_address := message.Header.Get("From")
 
-	//Assume that there is only one recipient - the one we care about
+	//Assume that valid messages have only one recipient - the one we care about
 	addresses, err := message.Header.AddressList("To")
 	if err != nil {
 		return err
@@ -67,8 +70,18 @@ func processMessage(filename string) error {
 	to_address := addresses[0].Address
 	log.Printf("Found address %s for message %s", to_address, message_id)
 
+    //Only allow emails sent from the configured email
+    if from_address != CONFIGURED_EMAIL {
+        log.Print("Skipping email sent from %s", from_address)
+        return nil
+    }
+
+
+
+    //Determine what time reminder message should be sent
 	t, err := extractTimeFromAddress(to_address)
 	if err != nil {
+        log.Print("Error extracting time from %v: %v", to_address, err)
 		return err
 	}
 
@@ -76,6 +89,7 @@ func processMessage(filename string) error {
 
 	log.Printf("Scheduling message for %v", t)
 	if err := scheduleFutureMessage(*CONFIGURED_EMAIL, message_id, subject, t); err != nil {
+        log.Print("Error scheduling future message %v", err)
 		return err
 	}
 
@@ -196,4 +210,23 @@ Subject: {{.Subject}}
 		return err
 	}
 	return nil
+}
+
+//monitorBox will check periodically (every 2 minutes?) for new messages that need to be scheduled, and schedule them if present
+func monitorBox() {
+
+    for {
+        //TODO abstract this to use any root directory for the box
+        files, err := ioutil.ReadDir(filepath.Join(ROOT_DIRECTORY, "new"))
+        if err != nil{
+            log.Print("error reading directory: %v", err)
+        }
+
+        for _, file := range files {
+            err := processMessage(filepath.Join(ROOT_DIRECTORY, "new", file))
+            log.Print("Error processing message %v", err)
+        }
+        log.Print("Sleeping for %s seconds", _CHECK_INTERVAL)
+        time.Sleep(_CHECK_INTERVAL)
+    }
 }
