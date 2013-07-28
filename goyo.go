@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 )
 
@@ -31,6 +32,12 @@ var UNIQ_FILENAME_REGEX = regexp.MustCompile(`(.+):`)
 
 func init() {
 	flag.Parse()
+}
+
+type Response struct {
+	Recipient string
+	Subject   string
+	Body      string
 }
 
 //processMessage processes each new message that appears in /new
@@ -148,7 +155,19 @@ func uniqueFromFilename(filename string) (uniq string) {
 	return
 }
 
-func sendMail(recipient_email string) {
+func sendMail(recipient_email, message_id, original_subject string) error {
+
+	tmpl, err := template.New("email_response").Parse(`To: {{.Recipient}}
+Subject: {{.Subject}}
+
+{{.Body}}`)
+	if err != nil {
+		return err
+	}
+
+	b := &bytes.Buffer{}
+	err = tmpl.Execute(b, Response{recipient_email, "Re: " + original_subject, "Test body"})
+
 	auth := smtp.PlainAuth(
 		"",
 		*EMAIL_ADDRESS,
@@ -157,21 +176,19 @@ func sendMail(recipient_email string) {
 	)
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
-	err := smtp.SendMail(
+	err = smtp.SendMail(
 		"smtp.gmail.com:25",
 		auth,
 		*EMAIL_ADDRESS,
 		[]string{recipient_email},
 
 		//TODO use proper Go templating for this
-		[]byte(`To: kev23819@gmail.com
-Subject: Test email
-
-This is the body of the reminder email.`),
+		b.Bytes(),
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 
 }
