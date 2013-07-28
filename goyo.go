@@ -56,6 +56,7 @@ func processMessage(filename string) error {
 	}
 
 	message_id := message.Header.Get("Message-ID")
+	subject := message.Header.Get("Subject")
 
 	//Assume that there is only one recipient - the one we care about
 	addresses, err := message.Header.AddressList("To")
@@ -74,7 +75,7 @@ func processMessage(filename string) error {
 	//Schedule future message for that yo-yoed time
 
 	log.Printf("Scheduling message for %v", t)
-	if err := scheduleFutureMessage(filename, t); err != nil {
+	if err := scheduleFutureMessage(*CONFIGURED_EMAIL, message_id, subject, t); err != nil {
 		return err
 	}
 
@@ -138,11 +139,15 @@ func extractTimeFromAddress(to_address string) (time.Time, error) {
 }
 
 //scheduleFutureMessage schedules a future email delivery
-func scheduleFutureMessage(filename string, t time.Time) (err error) {
-	//TODO actually implement this
-	uniq := uniqueFromFilename(filename)
-	log.Print(uniq)
+func scheduleFutureMessage(recipient_email, message_id, original_subject string, t time.Time) (err error) {
 
+    //TODO store a journal of jobs in a persistent database for logging/auditing/etc.
+    time_to_sleep := t.Sub(time.Now())
+    go func(recipient_email, message_id, original_subject string, d time.Duration){
+        log.Printf("Sleeping for %v", d)
+        time.Sleep(d)
+        sendMail(recipient_email, message_id, original_subject)
+    }(recipient_email, message_id, original_subject, time_to_sleep)
 	return nil
 }
 
@@ -155,8 +160,9 @@ func uniqueFromFilename(filename string) (uniq string) {
 	return
 }
 
+//sendMail sends a reply email, given the original Message-ID header and original Subject header
+//This will allow clients which support threading to thread conversations properly
 func sendMail(recipient_email, message_id, original_subject string) error {
-
 	tmpl, err := template.New("email_response").Parse(`To: {{.Recipient}}
 Subject: {{.Subject}}
 
@@ -190,5 +196,4 @@ Subject: {{.Subject}}
 		return err
 	}
 	return nil
-
 }
