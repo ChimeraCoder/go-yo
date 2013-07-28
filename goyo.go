@@ -71,7 +71,7 @@ func processMessage(filename string) error {
 	log.Printf("Found address %s for message %s", to_address, message_id)
 
     //Only allow emails sent from the configured email
-    if from_address != CONFIGURED_EMAIL {
+    if from_address != *CONFIGURED_EMAIL {
         log.Print("Skipping email sent from %s", from_address)
         return nil
     }
@@ -217,13 +217,13 @@ func monitorBox() {
 
     for {
         //TODO abstract this to use any root directory for the box
-        files, err := ioutil.ReadDir(filepath.Join(ROOT_DIRECTORY, "new"))
+        files, err := ioutil.ReadDir(filepath.Join(*ROOT_DIRECTORY, "new"))
         if err != nil{
             log.Print("error reading directory: %v", err)
         }
 
         for _, file := range files {
-            err := processMessage(filepath.Join(ROOT_DIRECTORY, "new", file))
+            err := processMessage(filepath.Join(*ROOT_DIRECTORY, "new", file.Name()))
             log.Print("Error processing message %v", err)
         }
         log.Print("Sleeping for %s seconds", _CHECK_INTERVAL)
