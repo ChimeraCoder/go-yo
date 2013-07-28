@@ -72,7 +72,7 @@ func processMessage(filename string) error {
 
     //Only allow emails sent from the configured email
     if from_address != *CONFIGURED_EMAIL {
-        log.Print("Skipping email sent from %s", from_address)
+        log.Printf("Skipping email sent from %s", from_address)
         return nil
     }
 
@@ -81,7 +81,7 @@ func processMessage(filename string) error {
     //Determine what time reminder message should be sent
 	t, err := extractTimeFromAddress(to_address)
 	if err != nil {
-        log.Print("Error extracting time from %v: %v", to_address, err)
+        log.Printf("Error extracting time from %v: %v", to_address, err)
 		return err
 	}
 
@@ -89,7 +89,7 @@ func processMessage(filename string) error {
 
 	log.Printf("Scheduling message for %v", t)
 	if err := scheduleFutureMessage(*CONFIGURED_EMAIL, message_id, subject, t); err != nil {
-        log.Print("Error scheduling future message %v", err)
+        log.Printf("Error scheduling future message %v", err)
 		return err
 	}
 
@@ -219,14 +219,14 @@ func monitorBox() {
         //TODO abstract this to use any root directory for the box
         files, err := ioutil.ReadDir(filepath.Join(*ROOT_DIRECTORY, "new"))
         if err != nil{
-            log.Print("error reading directory: %v", err)
+            log.Printf("error reading directory: %v", err)
         }
 
         for _, file := range files {
             err := processMessage(filepath.Join(*ROOT_DIRECTORY, "new", file.Name()))
-            log.Print("Error processing message %v", err)
+            log.Printf("Error processing message %v", err)
         }
-        log.Print("Sleeping for %s seconds", _CHECK_INTERVAL)
+        log.Printf("Sleeping for %s seconds", _CHECK_INTERVAL)
         time.Sleep(_CHECK_INTERVAL)
     }
 }
