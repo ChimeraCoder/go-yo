@@ -155,7 +155,7 @@ func scheduleFutureMessage(recipient_email, message_id, original_subject string,
 	//TODO store a journal of jobs in a persistent database for logging/auditing/etc.
 	time_to_sleep := t.Sub(time.Now())
 	go func(recipient_email, message_id, original_subject string, d time.Duration) {
-		log.Printf("Sleeping for %v", d)
+		log.Printf("Sending email %s to %s in %v from now", original_subject, recipient_email, d)
 		time.Sleep(d)
 		sendMail(recipient_email, message_id, original_subject)
 	}(recipient_email, message_id, original_subject, time_to_sleep)
@@ -183,7 +183,8 @@ Subject: {{.Subject}}
 	}
 
 	b := &bytes.Buffer{}
-	err = tmpl.Execute(b, Response{recipient_email, "Re: " + original_subject, "Test body"})
+	r := Response{recipient_email, "Re: " + original_subject, "Test body"}
+	err = tmpl.Execute(b, r)
 
 	auth := smtp.PlainAuth(
 		"",
@@ -193,6 +194,7 @@ Subject: {{.Subject}}
 	)
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
+	log.Printf("Sending email %v", r)
 	err = smtp.SendMail(
 		"smtp.gmail.com:25",
 		auth,
