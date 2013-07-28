@@ -31,7 +31,6 @@ var TIME_REGEX = regexp.MustCompile(`\+([0-9]+)\.([A-Za-z]+)@`)
 
 var UNIQ_FILENAME_REGEX = regexp.MustCompile(`(.+):`)
 
-
 func init() {
 	flag.Parse()
 }
@@ -70,18 +69,16 @@ func processMessage(filename string) error {
 	to_address := addresses[0].Address
 	log.Printf("Found address %s for message %s", to_address, message_id)
 
-    //Only allow emails sent from the configured email
-    if from_address != *CONFIGURED_EMAIL {
-        log.Printf("Skipping email sent from %s", from_address)
-        return nil
-    }
+	//Only allow emails sent from the configured email
+	if from_address != *CONFIGURED_EMAIL {
+		log.Printf("Skipping email sent from %s", from_address)
+		return nil
+	}
 
-
-
-    //Determine what time reminder message should be sent
+	//Determine what time reminder message should be sent
 	t, err := extractTimeFromAddress(to_address)
 	if err != nil {
-        log.Printf("Error extracting time from %v: %v", to_address, err)
+		log.Printf("Error extracting time from %v: %v", to_address, err)
 		return err
 	}
 
@@ -89,7 +86,7 @@ func processMessage(filename string) error {
 
 	log.Printf("Scheduling message for %v", t)
 	if err := scheduleFutureMessage(*CONFIGURED_EMAIL, message_id, subject, t); err != nil {
-        log.Printf("Error scheduling future message %v", err)
+		log.Printf("Error scheduling future message %v", err)
 		return err
 	}
 
@@ -155,13 +152,13 @@ func extractTimeFromAddress(to_address string) (time.Time, error) {
 //scheduleFutureMessage schedules a future email delivery
 func scheduleFutureMessage(recipient_email, message_id, original_subject string, t time.Time) (err error) {
 
-    //TODO store a journal of jobs in a persistent database for logging/auditing/etc.
-    time_to_sleep := t.Sub(time.Now())
-    go func(recipient_email, message_id, original_subject string, d time.Duration){
-        log.Printf("Sleeping for %v", d)
-        time.Sleep(d)
-        sendMail(recipient_email, message_id, original_subject)
-    }(recipient_email, message_id, original_subject, time_to_sleep)
+	//TODO store a journal of jobs in a persistent database for logging/auditing/etc.
+	time_to_sleep := t.Sub(time.Now())
+	go func(recipient_email, message_id, original_subject string, d time.Duration) {
+		log.Printf("Sleeping for %v", d)
+		time.Sleep(d)
+		sendMail(recipient_email, message_id, original_subject)
+	}(recipient_email, message_id, original_subject, time_to_sleep)
 	return nil
 }
 
@@ -215,18 +212,20 @@ Subject: {{.Subject}}
 //monitorBox will check periodically (every 2 minutes?) for new messages that need to be scheduled, and schedule them if present
 func monitorBox() {
 
-    for {
-        //TODO abstract this to use any root directory for the box
-        files, err := ioutil.ReadDir(filepath.Join(*ROOT_DIRECTORY, "new"))
-        if err != nil{
-            log.Printf("error reading directory: %v", err)
-        }
+	for {
+		//TODO abstract this to use any root directory for the box
+		files, err := ioutil.ReadDir(filepath.Join(*ROOT_DIRECTORY, "new"))
+		if err != nil {
+			log.Printf("error reading directory: %v", err)
+		}
 
-        for _, file := range files {
-            err := processMessage(filepath.Join(*ROOT_DIRECTORY, "new", file.Name()))
-            log.Printf("Error processing message %v", err)
-        }
-        log.Printf("Sleeping for %s seconds", _CHECK_INTERVAL)
-        time.Sleep(_CHECK_INTERVAL)
-    }
+		for _, file := range files {
+			err := processMessage(filepath.Join(*ROOT_DIRECTORY, "new", file.Name()))
+			if err != nil {
+				log.Printf("Error processing message %v", err)
+			}
+		}
+		log.Printf("Sleeping for %s seconds", _CHECK_INTERVAL)
+		time.Sleep(_CHECK_INTERVAL)
+	}
 }
