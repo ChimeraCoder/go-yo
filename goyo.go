@@ -18,7 +18,13 @@ import (
 	"time"
 )
 
+
+//WARNING: All of these flags are unstable and currently subject to change
 var ROOT_DIRECTORY = flag.String("rootdir", "", "root directory for mail")
+var EMAIL_ADDRESS = flag.String("email", "", "email address")
+var EMAIL_PASSWORD = flag.String("password", "", "email password")
+var CONFIGURED_EMAIL= flag.String("configuredemail", "", "configured email")
+
 
 var TIME_REGEX = regexp.MustCompile(`\+([0-9]+)\.([A-Za-z]+)@`)
 
@@ -139,4 +145,26 @@ func uniqueFromFilename(filename string) (uniq string) {
 	matches := UNIQ_FILENAME_REGEX.FindStringSubmatch(filename)
 	uniq = matches[1]
 	return
+}
+
+func sendMail(recipient_email string) {
+	auth := smtp.PlainAuth(
+		"",
+        EMAIL_ADDRESS,
+        EMAIL_PASSWORD,
+		"smtp.gmail.com", //TODO abstract this beyond Google/Gmail
+	)
+	// Connect to the server, authenticate, set the sender and recipient,
+	// and send the email all in one step.
+	err := smtp.SendMail(
+		"smtp.gmail.com:25",
+		auth,
+        EMAIL_ADDRESS,
+		[]string{recipient_email},
+		[]byte("This is the body of the reminder email."),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
