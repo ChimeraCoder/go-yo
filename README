@@ -32,7 +32,7 @@ Under the hood
 
 Go-Yo uses the Maildir format for interoperability. Documentation about the Maildir format is available at http://cr.yp.to/proto/maildir.html
 
-Use a service such as offlineimap to fetch new messages and write them to the Maildir. Once new emails appear in the /new subdirectory, they are ready for processing by Go-Yo.
+Use a service such as `offlineimap` to fetch new messages and write them to the Maildir. Once new emails appear in the /new subdirectory, they are ready for processing by Go-Yo.
 
 Go-Yo finds new messages in /new and, after processing them and scheduling the 'bounce' message, moves them to the /cur directory, adding the *info* string to the filename (see documentation) - and, specifically, setting the message flag to **S** (seen).
 
