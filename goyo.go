@@ -187,7 +187,7 @@ Subject: {{.Subject}}
 	if err != nil {
 		return err
 	}
-	r := Response{recipient_address.Address, "Re: " + original_subject, "Test body"}
+	r := Response{recipient_email, "Re: " + original_subject, "Test body"}
 	err = tmpl.Execute(b, r)
 
 	auth := smtp.PlainAuth(
@@ -203,7 +203,7 @@ Subject: {{.Subject}}
 		"smtp.gmail.com:25",
 		auth,
 		*EMAIL_ADDRESS,
-		[]string{recipient_email},
+		[]string{recipient_address.Address},
 
 		//TODO use proper Go templating for this
 		b.Bytes(),
