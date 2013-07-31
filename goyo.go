@@ -183,7 +183,11 @@ Subject: {{.Subject}}
 	}
 
 	b := &bytes.Buffer{}
-	r := Response{recipient_email, "Re: " + original_subject, "Test body"}
+	recipient_address, err := mail.ParseAddress(recipient_email)
+	if err != nil {
+		return err
+	}
+	r := Response{recipient_address.Address, "Re: " + original_subject, "Test body"}
 	err = tmpl.Execute(b, r)
 
 	auth := smtp.PlainAuth(
