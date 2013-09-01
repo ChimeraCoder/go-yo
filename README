@@ -132,10 +132,13 @@ echo "export GOPATH=~/go" >> ~/.bashrc && source .bashrc
 ````
 
 
-Start running
+Start running `go-yo`
 ````
 $GOPATH/bin/go-yo -rootdir ~/mail/GMail/INBOX/
 ````
+
+
+Eventually you will want to [run `offlineimap` in the background](https://wiki.archlinux.org/index.php/OfflineIMAP#Running_offlineimap_in_the_background)
 
 
 
