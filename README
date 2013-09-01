@@ -49,7 +49,7 @@ After delivery, Go-Yo does *not* delete (ie, set flag **T** - trashed) for messa
 Setup
 -----------------
 
-(This setup procedure is subject to change until the first stable release of `go-yo`. Until then, go-yo must be compiled from source and run manually).
+(This setup procedure is subject to change until the first stable release of `go-yo`. Until then, `go-yo` must be compiled from source and run manually).
 
 
 ````
