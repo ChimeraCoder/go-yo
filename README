@@ -40,3 +40,108 @@ Go-Yo uses the unique portion of the filename to identify which messages to boun
 
 
 After delivery, Go-Yo does *not* delete (ie, set flag **T** - trashed) for messages. This allows easy debugging and poor-man's logging.
+
+
+
+
+
+
+Setup
+-----------------
+
+(This setup procedure is subject to change until the first stable release of `go-yo`. Until then, go-yo must be compiled from source and run manually).
+
+
+````
+ec2-run-instances ami-d0f89fb9 -k KEYPAIR_NAME 
+````
+
+SSH into the instance once it's up and running. 
+
+First, we'll need to install Go 
+
+
+````
+wget https://go.googlecode.com/files/go1.1.2.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.1.2.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+````
+
+Set your GOPATH
+
+````
+echo "export GOPATH=~/go" >> ~/.bashrc && source .bashrc
+````
+
+````
+sudo apt-get install offlineimap
+````
+
+
+Then, populate .offlineimaprc
+
+````
+[general]
+ui = ttyui
+accounts = GMail
+
+[Account GMail]
+localrepository = Gmail-Local
+remoterepository = Gmail-Remote
+#Controls how many accounts may be synchronized simultaneously
+maxsyncaccounts = 3 
+maxconnections = 3 
+
+[Repository Gmail-Local]
+type = Maildir
+localfolders = ~/mail/GMail
+
+[Repository Gmail-Remote]
+type = Gmail
+remoteuser = YOUR_EMAIL_ADDRESS@gmail.com
+remotepass = YOUR_PASSWORD_HERE
+sslcacertfile = /etc/ssl/certs/ca-certificates.crt
+realdelete = no
+# Instead of closing the connection once a sync is complete, offlineimap will
+# send empty data to the server to hold the connection open. A value of 60
+# attempts to hold the connection for a minute between syncs (both quick and 
+# autorefresh)
+keepalive = 60
+````
+
+
+````
+mkdir -p ~/mail/GMail
+````
+
+
+Test it out now
+
+````
+offlineimap -o
+````
+
+If you get no error messages, synchronization worked, and you should now have a complete folder mail within `~/mail/GMail`
+
+
+Now, time to install `go-yo`
+
+Most Ubuntu installations ship without git.
+
+````
+sudo apt-get install git
+````
+
+````
+echo "export GOPATH=~/go" >> ~/.bashrc && source .bashr
+````
+
+
+Start running
+````
+$GOPATH/bin/go-yo -rootdir ~/mail/GMail/INBOX/
+````
+
+
+
+
