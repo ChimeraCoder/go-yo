@@ -128,7 +128,7 @@ If you get no error messages, synchronization worked, and you should now have a 
 Now, time to install `go-yo`
 
 ````
-echo "export GOPATH=~/go" >> ~/.bashrc && source .bashrc
+go get github.com/ChimeraCoder/go-yo
 ````
 
 
