@@ -58,7 +58,7 @@ func processMessage(filename string) error {
 
 	message_id := message.Header.Get("Message-ID")
 	subject := message.Header.Get("Subject")
-	from_address := message.Header.Get("From")
+	from_address := message.Header.Get("Return-Path")
 
 	//Assume that valid messages have only one recipient - the one we care about
 	addresses, err := message.Header.AddressList("To")
@@ -70,7 +70,8 @@ func processMessage(filename string) error {
 	log.Printf("Found address %s for message %s", to_address, message_id)
 
 	//Only allow emails sent from the configured email
-	if from_address != *CONFIGURED_EMAIL {
+    //TODO do something less hacky to allow angled brackets
+	if from_address != *CONFIGURED_EMAIL  && from_address != "<" + *CONFIGURED_EMAIL + ">" {
 		log.Printf("Skipping email sent from %s", from_address)
 		return nil
 	}
