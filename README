@@ -79,7 +79,7 @@ sudo apt-get install offlineimap git
 ````
 
 
-Then, populate `.offlineimaprc` with the following (create it if it does not exist).
+Then, populate `~/.offlineimaprc` with the following (create it if it does not exist).
 
 ````
 [general]
