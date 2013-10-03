@@ -134,7 +134,7 @@ go get github.com/ChimeraCoder/go-yo
 
 Start running `go-yo`
 ````
-$GOPATH/bin/go-yo -rootdir ~/mail/GMail/INBOX/
+$GOPATH/bin/go-yo -rootdir ~/mail/GMail/INBOX/ -email YOUR_EMAIL_ADDRESS -password EMAIL_PASSWORD -configuredemail CONFIGUREDEMAIL
 ````
 
 
