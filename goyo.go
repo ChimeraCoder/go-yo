@@ -14,7 +14,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -28,7 +27,7 @@ var EMAIL_ADDRESS = flag.String("email", "", "email address")
 var EMAIL_PASSWORD = flag.String("password", "", "email password")
 var CONFIGURED_EMAIL = flag.String("configuredemail", "", "configured email")
 
-var TIME_REGEX = regexp.MustCompile(`\+([0-9]+)\.([A-Za-z]+)@`)
+var TIME_REGEX = regexp.MustCompile(`\+([0-9A-Za-z\.]+)@`)
 
 var UNIQ_FILENAME_REGEX = regexp.MustCompile(`(.+):`)
 
@@ -109,46 +108,12 @@ func extractTimeFromAddress(to_address string) (future_time time.Time, err error
 		err = fmt.Errorf("Could not extract time from email address %s", to_address)
 		return
 	}
-	number_s := matches[1]
-	time_unit_s := matches[2]
 
-	number, err := strconv.Atoi(number_s)
+	delay, err := time.ParseDuration(matches[1])
 	if err != nil {
 		return
 	}
 
-	//For now, we'll support minutes, hours, days, weeks, and months
-
-	var time_unit time.Duration
-
-	switch strings.ToLower(time_unit_s) {
-	case "minute", "minutes":
-		{
-			time_unit = time.Minute
-		}
-
-	case "hour", "hours":
-		{
-			time_unit = time.Hour
-		}
-
-	case "day", "days":
-		{
-			time_unit = 24 * time.Hour
-		}
-
-	case "week", "weeks":
-		{
-			time_unit = 7 * 24 * time.Hour
-		}
-
-	case "month", "months":
-		{
-			time_unit = 30 * 7 * 24 * time.Hour
-		}
-	}
-
-	delay := time.Duration(number) * time_unit
 	//TODO use the time the message was sent instead of time.Now
 	future_time = time.Now().Add(delay)
 	return
