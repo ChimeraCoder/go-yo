@@ -39,6 +39,7 @@ type Response struct {
 	Recipient string
 	Subject   string
 	Body      string
+	ParentID  string
 }
 
 //processMessage processes each new message that appears in /new
@@ -145,7 +146,8 @@ func uniqueFromFilename(filename string) (uniq string) {
 //sendMail sends a reply email, given the original Message-ID header and original Subject header
 //This will allow clients which support threading to thread conversations properly
 func sendMail(recipient_email, message_id, original_subject string) error {
-	tmpl, err := template.New("email_response").Parse(`To: {{.Recipient}}
+	tmpl, err := template.New("email_response").Parse(`In-Reply-To: {{.ParentID}}
+To: {{.Recipient}}
 Subject: {{.Subject}}
 
 {{.Body}}`)
@@ -158,7 +160,7 @@ Subject: {{.Subject}}
 	if err != nil {
 		return err
 	}
-	r := Response{recipient_email, "Re: " + original_subject, "Test body"}
+	r := Response{recipient_email, "Re: " + original_subject, "Test body", message_id}
 	err = tmpl.Execute(b, r)
 
 	auth := smtp.PlainAuth(
