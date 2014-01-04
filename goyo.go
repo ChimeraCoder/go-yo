@@ -6,6 +6,7 @@ package main
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/mail"
@@ -70,8 +71,8 @@ func processMessage(filename string) error {
 	log.Printf("Found address %s for message %s", to_address, message_id)
 
 	//Only allow emails sent from the configured email
-    //TODO do something less hacky to allow angled brackets
-	if from_address != *CONFIGURED_EMAIL  && from_address != "<" + *CONFIGURED_EMAIL + ">" {
+	//TODO do something less hacky to allow angled brackets
+	if from_address != *CONFIGURED_EMAIL && from_address != "<"+*CONFIGURED_EMAIL+">" {
 		log.Printf("Skipping email sent from %s", from_address)
 		return nil
 	}
@@ -100,16 +101,20 @@ func processMessage(filename string) error {
 }
 
 //Parse an email address and return the future time at which to bounce the email
-func extractTimeFromAddress(to_address string) (time.Time, error) {
+func extractTimeFromAddress(to_address string) (future_time time.Time, err error) {
 
 	matches := TIME_REGEX.FindStringSubmatch(to_address)
 
+	if len(matches) != 2 {
+		err = fmt.Errorf("Could not extract time from email address %s", to_address)
+		return
+	}
 	number_s := matches[1]
 	time_unit_s := matches[2]
 
 	number, err := strconv.Atoi(number_s)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	//For now, we'll support minutes, hours, days, weeks, and months
@@ -145,8 +150,8 @@ func extractTimeFromAddress(to_address string) (time.Time, error) {
 
 	delay := time.Duration(number) * time_unit
 	//TODO use the time the message was sent instead of time.Now
-	future_time := time.Now().Add(delay)
-	return future_time, nil
+	future_time = time.Now().Add(delay)
+	return
 
 }
 
@@ -229,7 +234,7 @@ func monitorBox() {
 		for _, file := range files {
 			err := processMessage(filepath.Join(*ROOT_DIRECTORY, "new", file.Name()))
 			if err != nil {
-				log.Printf("Error processing message %v", err)
+				log.Printf("ERROR processing message %v", err)
 			}
 		}
 		log.Printf("Sleeping for %s seconds", _CHECK_INTERVAL)
@@ -237,6 +242,6 @@ func monitorBox() {
 	}
 }
 
-func main(){
-    monitorBox()
+func main() {
+	monitorBox()
 }
