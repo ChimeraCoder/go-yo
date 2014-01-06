@@ -209,6 +209,16 @@ func monitorBox() {
 	}
 }
 
+// Create "ROOT_DIRECTORY/../scheduled/cur/" if it does not exist
+func init() {
+	directories := []string{"cur", "tmp", "new"}
+	for _, directory := range directories {
+		if err := os.MkdirAll(filepath.Join(*ROOT_DIRECTORY, "..", "goyo", directory), os.ModePerm); err != nil {
+			panic(err)
+		}
+	}
+}
+
 func main() {
 	monitorBox()
 }
