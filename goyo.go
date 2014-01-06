@@ -206,6 +206,7 @@ Subject: {{.Subject}}
 //monitorBox will check periodically (every 2 minutes?) for new messages that need to be scheduled, and schedule them if present
 func monitorBox() {
 
+	log.Printf("Beginning to montor box")
 	c := time.Tick(_CHECK_INTERVAL)
 	for now := range c {
 		log.Printf("Checking directory at %v", now)
