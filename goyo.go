@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-const _CHECK_INTERVAL = 120 * time.Second
+const _CHECK_INTERVAL = 30 * time.Second
 
 //WARNING: All of these flags are unstable and currently subject to change
 var ROOT_DIRECTORY = flag.String("rootdir", "", "root directory for mail")
@@ -87,12 +87,12 @@ func processMessage(filename string) error {
 	//Schedule future message for that yo-yoed time
 
 	log.Printf("Scheduling message for %v", t)
-	if err := scheduleFutureMessage(*CONFIGURED_EMAIL, message_id, subject, t); err != nil {
+	if err := scheduleFutureMessage(*CONFIGURED_EMAIL, message_id, subject, t, filename); err != nil {
 		log.Printf("Error scheduling future message %v", err)
 		return err
 	}
 
-	//Move message from /new to /cur, setting Maildir info flag to S (seen)
+	//Move message from INBOX/new to INBOX/cur, setting Maildir info flag to S (seen)
 	destination := filepath.Join(*ROOT_DIRECTORY, "cur", strings.TrimPrefix(uniqueFromFilename(filename)+":2,S", filepath.Join(*ROOT_DIRECTORY, "new")))
 	log.Printf("Moving message from %s to %s", filename, destination)
 	err = os.Rename(filename, destination)
@@ -121,15 +121,30 @@ func extractTimeFromAddress(to_address string) (future_time time.Time, err error
 
 }
 
-//scheduleFutureMessage schedules a future email delivery
-func scheduleFutureMessage(recipient_email, message_id, original_subject string, t time.Time) (err error) {
+// scheduleFutureMessage schedules a future email delivery
+// After a successful delivery, messages will be archived (moved to [Gmail].All Mail/cur)
+func scheduleFutureMessage(recipient_email, message_id, original_subject string, t time.Time, filename string) (err error) {
 
 	//TODO store a journal of jobs in a persistent database for logging/auditing/etc.
 	time_to_sleep := t.Sub(time.Now())
 	go func(recipient_email, message_id, original_subject string, d time.Duration) {
 		log.Printf("Sending email %s to %s in %v from now", original_subject, recipient_email, d)
 		time.Sleep(d)
-		sendMail(recipient_email, message_id, original_subject)
+		err := sendMail(recipient_email, message_id, original_subject)
+		if err != nil {
+			log.Printf("Error sending email %s: %s", original_subject, err)
+		} else {
+			// Move message from INBOX/cur to [Gmail].All Mail/cur
+			path := filepath.Join(*ROOT_DIRECTORY, "cur", filename+":2,S")
+			destination := filepath.Join(*ROOT_DIRECTORY, "..", "[Gmail].All Mail", "cur", filename)
+			err = os.Rename(path, destination)
+			if err != nil {
+				log.Printf("ERROR moving %s to %s", path, destination)
+			} else {
+				log.Printf("Moved message from %s to %s", path, destination)
+			}
+		}
+
 	}(recipient_email, message_id, original_subject, time_to_sleep)
 	return nil
 }
