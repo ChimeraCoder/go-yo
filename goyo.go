@@ -129,7 +129,7 @@ func scheduleFutureMessage(recipient_email, message_id, original_subject string,
 	time_to_sleep := t.Sub(time.Now())
 	go func(recipient_email, message_id, original_subject string, d time.Duration) {
 		log.Printf("Sending email %s to %s in %v from now", original_subject, recipient_email, d)
-		time.Sleep(d)
+		<-time.After(d)
 		err := sendMail(recipient_email, message_id, original_subject)
 		if err != nil {
 			log.Printf("Error sending email %s: %s", original_subject, err)
@@ -206,7 +206,9 @@ Subject: {{.Subject}}
 //monitorBox will check periodically (every 2 minutes?) for new messages that need to be scheduled, and schedule them if present
 func monitorBox() {
 
-	for {
+	c := time.Tick(_CHECK_INTERVAL)
+	for now := range c {
+		log.Printf("Checking directory at %v", now)
 		//TODO abstract this to use any root directory for the box
 		files, err := ioutil.ReadDir(filepath.Join(*ROOT_DIRECTORY, "new"))
 		if err != nil {
@@ -219,8 +221,6 @@ func monitorBox() {
 				log.Printf("ERROR processing message %v", err)
 			}
 		}
-		log.Printf("Sleeping for %s seconds", _CHECK_INTERVAL)
-		time.Sleep(_CHECK_INTERVAL)
 	}
 }
 
