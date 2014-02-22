@@ -193,7 +193,7 @@ Subject: {{.Subject}}
 	)
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
-	log.Printf("Sending email %v", r)
+	log.Printf("Sending email %s to %s", message_id, recipient_email)
 	err = smtp.SendMail(
 		"smtp.gmail.com:25",
 		auth,
