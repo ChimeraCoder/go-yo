@@ -146,7 +146,7 @@ func scheduleFutureMessage(recipient_email, message_id, original_subject, body s
 			destination := filepath.Join(*ROOT_DIRECTORY, "..", "[Gmail].All Mail", "cur", filename)
 			err = os.Rename(path, destination)
 			if err != nil {
-				log.Printf("ERROR moving %s to %s", path, destination)
+				log.Printf("ERROR moving %s to %s: %s", path, destination, err)
 			} else {
 				log.Printf("Moved message from %s to %s", path, destination)
 			}
