@@ -53,6 +53,13 @@ func processMessage(filename string) error {
 
 	message, err := mail.ReadMessage(bytes.NewBuffer(bts))
 
+	body, err := ioutil.ReadAll(message.Body)
+	if err != nil {
+		return err
+	}
+	r := regexp.MustCompile(`(?m)^`)
+	replyBody := r.ReplaceAllString(string(body), ">")
+
 	if err != nil {
 		return err
 	}
@@ -87,7 +94,7 @@ func processMessage(filename string) error {
 	//Schedule future message for that yo-yoed time
 
 	log.Printf("Scheduling message for %v", t)
-	if err := scheduleFutureMessage(*CONFIGURED_EMAIL, message_id, subject, t, filename); err != nil {
+	if err := scheduleFutureMessage(*CONFIGURED_EMAIL, message_id, subject, replyBody, t, filename); err != nil {
 		log.Printf("Error scheduling future message %v", err)
 		return err
 	}
@@ -123,14 +130,14 @@ func extractTimeFromAddress(to_address string) (future_time time.Time, err error
 
 // scheduleFutureMessage schedules a future email delivery
 // After a successful delivery, messages will be archived (moved to [Gmail].All Mail/cur)
-func scheduleFutureMessage(recipient_email, message_id, original_subject string, t time.Time, filename string) (err error) {
+func scheduleFutureMessage(recipient_email, message_id, original_subject, body string, t time.Time, filename string) (err error) {
 
 	//TODO store a journal of jobs in a persistent database for logging/auditing/etc.
 	time_to_sleep := t.Sub(time.Now())
 	go func(recipient_email, message_id, original_subject string, d time.Duration) {
 		log.Printf("Sending email %s to %s in %v from now", original_subject, recipient_email, d)
 		<-time.After(d)
-		err := sendMail(recipient_email, message_id, original_subject)
+		err := sendMail(recipient_email, message_id, original_subject, body)
 		if err != nil {
 			log.Printf("Error sending email %s: %s", original_subject, err)
 		} else {
@@ -160,7 +167,7 @@ func uniqueFromFilename(filename string) (uniq string) {
 
 //sendMail sends a reply email, given the original Message-ID header and original Subject header
 //This will allow clients which support threading to thread conversations properly
-func sendMail(recipient_email, message_id, original_subject string) error {
+func sendMail(recipient_email, message_id, original_subject, body string) error {
 	tmpl, err := template.New("email_response").Parse(`In-Reply-To: {{.ParentID}}
 To: {{.Recipient}}
 Subject: {{.Subject}}
@@ -175,7 +182,7 @@ Subject: {{.Subject}}
 	if err != nil {
 		return err
 	}
-	r := Response{recipient_email, "Re: " + original_subject, "Test body", message_id}
+	r := Response{recipient_email, "Re: " + original_subject, body, message_id}
 	err = tmpl.Execute(b, r)
 
 	auth := smtp.PlainAuth(
@@ -206,7 +213,7 @@ Subject: {{.Subject}}
 //monitorBox will check periodically (every 2 minutes?) for new messages that need to be scheduled, and schedule them if present
 func monitorBox() {
 
-	log.Printf("Beginning to montor box")
+	log.Printf("Beginning to monitor box")
 	c := time.Tick(_CHECK_INTERVAL)
 	for now := range c {
 		log.Printf("Checking directory at %v", now)
