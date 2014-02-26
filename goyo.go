@@ -58,7 +58,7 @@ func processMessage(filename string) error {
 		return err
 	}
 	r := regexp.MustCompile(`(?m)^`)
-	replyBody := r.ReplaceAllString(string(body), ">")
+	replyBody := r.ReplaceAllString(string(body), "> ")
 
 	if err != nil {
 		return err
