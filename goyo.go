@@ -200,14 +200,10 @@ Subject: {{.Subject}}
 		*EMAIL_ADDRESS,
 		[]string{recipient_address.Address},
 
-		//TODO use proper Go templating for this
 		b.Bytes(),
 	)
 
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 //monitorBox will check periodically (every 2 minutes?) for new messages that need to be scheduled, and schedule them if present
