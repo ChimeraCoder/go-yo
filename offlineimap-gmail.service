@@ -1,0 +1,15 @@
+[Unit]
+Description=OfflineimapGmail
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+EnvironmentFile=/etc/sysconfig/go-yo
+ExecStartPre=-/usr/bin/docker kill goyo
+ExecStartPre=-/usr/bin/docker rm goyo
+ExecStartPre=/usr/bin/docker pull chimeracoder/go-yo
+ExecStart=/usr/bin/docker run --name goyo -e ROOT_DIRECTORY=${ROOT_DIRECTORY} -e EMAIL_ADDRESS=${EMAIL} -e EMAIL_PASSWORD=${PASSWORD} -e CONFIGURED_EMAIL=${CONFIGURED_EMAIL} -v /tmp/mail:/mail chimeracoder/offlineimap-gmail 
+
+[Install]
+WantedBy=multi-user.target

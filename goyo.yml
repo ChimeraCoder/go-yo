@@ -1,0 +1,31 @@
+---
+# Only necessary if running on machines with limited memory (under 512 MB)
+- hosts: offlineimap
+
+  tasks:
+  - name: Copy systemd service file
+    synchronize: src="go-yo.service" dest="/etc/systemd/system/go-yo.service"
+
+  - name: Write configured email to systemd config
+    lineinfile: dest="/etc/sysconfig/go-yo" state=present create=yes line="ROOT_DIRECTORY={{ lookup('env', 'ROOT_DIRECTORY') }}"  
+
+  - name: Write email to systemd config
+    lineinfile: dest="/etc/sysconfig/go-yo" state=present create=yes line="EMAIL_ADDRESS={{ lookup('env', 'EMAIL') }}"  
+
+  - name: Write password to systemd config
+    lineinfile: dest="/etc/sysconfig/go-yo" state=present create=yes line="EMAIL_PASSWORD={{ lookup('env', 'PASSWORD') }}"  
+
+  - name: Write configured email to systemd config
+    lineinfile: dest="/etc/sysconfig/go-yo" state=present create=yes line="CONFIGURED_EMAIL={{ lookup('env', 'CONFIGURED_EMAIL') }}"  
+
+
+  # Assumes RHEL-based server (Red Hat/Fedora/CentOS)
+  # Change to desired distro package manager
+  - name: Install docker
+    yum: name="docker-io" state="present"
+
+  - name: Make directory to mount as volume
+    file: path=/tmp/mail owner=root group=root mode=777 state=directory 
+
+  - name: Run systemd service for go-yo
+    service: name="go-yo" enabled="yes" state="started"
